@@ -2,11 +2,10 @@ package com.microservices.accounts.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.Id;
 
 @Entity
 @Getter @Setter @ToString @AllArgsConstructor @NoArgsConstructor
-public class Accounts extends BaseEntity {
+public class Accounts extends  BaseEntity {
 
     @Column(name="customer_id")
     private Long customerId;
@@ -14,7 +13,6 @@ public class Accounts extends BaseEntity {
     @Id
     @Column(name="account_number")
     private Long accountNumber;
-
 
     @Column(name="account_type")
     private String accountType;

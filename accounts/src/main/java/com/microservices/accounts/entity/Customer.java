@@ -2,7 +2,6 @@ package com.microservices.accounts.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.Id;
 
 @Entity
 @Getter @Setter @ToString @AllArgsConstructor @NoArgsConstructor
