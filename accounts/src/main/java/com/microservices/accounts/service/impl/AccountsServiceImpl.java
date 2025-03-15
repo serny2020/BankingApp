@@ -116,6 +116,56 @@ public class AccountsServiceImpl implements IAccountsService {
         customerDto.setAccountsDto(AccountsMapper.mapToAccountsDto(accounts, new AccountsDto()));
         return customerDto;
     }
+
+    /**
+     * @param customerDto - CustomerDto Object
+     * @return boolean indicating if the update of Account details is successful or not
+     */
+    @Override
+    public boolean updateAccount(CustomerDto customerDto) {
+        boolean isUpdated = false;
+
+        // Retrieve the accounts DTO from the customer DTO
+        AccountsDto accountsDto = customerDto.getAccountsDto();
+
+        if (accountsDto != null) {
+            // Fetch the existing account from the database using the account number
+            // If the account does not exist, throw a ResourceNotFoundException
+            Accounts accounts = accountsRepository.findById(accountsDto.getAccountNumber()).orElseThrow(
+                    () -> new ResourceNotFoundException("Account", "AccountNumber", accountsDto.getAccountNumber().toString())
+            );
+
+            // Map the updated account details from accountsDto to the existing account entity
+            // This ensures that only the existing account is updated instead of creating a new one
+            AccountsMapper.mapToAccounts(accountsDto, accounts);
+
+            // Save the updated account entity to persist changes
+            // This performs an update operation since the entity already exists in the repository
+            accounts = accountsRepository.save(accounts);
+
+            // Retrieve the customer ID associated with the account
+            Long customerId = accounts.getCustomerId();
+
+            // Fetch the existing customer using the customer ID
+            // If the customer does not exist, throw a ResourceNotFoundException
+            Customer customer = customerRepository.findById(customerId).orElseThrow(
+                    () -> new ResourceNotFoundException("Customer", "CustomerID", customerId.toString())
+            );
+
+            // Map the updated customer details from customerDto to the existing customer entity
+            // This ensures that only the existing customer is updated instead of creating a new one
+            CustomerMapper.mapToCustomer(customerDto, customer);
+
+            // Save the updated customer entity to persist changes
+            // This also performs an update operation since the entity already exists
+            customerRepository.save(customer);
+
+            // Mark the update as successful
+            isUpdated = true;
+        }
+
+        return isUpdated;
+    }
 }
 
 
