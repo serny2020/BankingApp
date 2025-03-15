@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
  * This controller interacts with the service layer to perform the business logic.
  */
 @RestController
-@RequestMapping(path="/api", produces = {MediaType.APPLICATION_JSON_VALUE})
+@RequestMapping(path = "/api", produces = {MediaType.APPLICATION_JSON_VALUE})
 @AllArgsConstructor
 public class AccountsController {
 
@@ -36,11 +36,24 @@ public class AccountsController {
         iAccountsService.createAccount(customerDto);
 
         // Returns a response with HTTP status 201 (Created) and a success message
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(new ResponseDto(AccountsConstants.STATUS_201, AccountsConstants.MESSAGE_201));
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseDto(AccountsConstants.STATUS_201, AccountsConstants.MESSAGE_201));
     }
 
+    /**
+     * Handles HTTP GET requests to fetch customer account details based on the provided mobile number.
+     *
+     * @param mobileNumber The mobile number of the customer whose account details are being requested.
+     * @return ResponseEntity containing the customer's account details as a CustomerDto object.
+     *         Returns HTTP 200 OK status if successful.
+     */
+    @GetMapping("/fetch")
+    public ResponseEntity<CustomerDto> fetchAccountDetails(@RequestParam String mobileNumber) {
+        // Fetch customer account details using the provided mobile number
+        CustomerDto customerDto = iAccountsService.fetchAccount(mobileNumber);
+
+        // Return the fetched customer details with an HTTP 200 OK response
+        return ResponseEntity.status(HttpStatus.OK).body(customerDto);
+    }
 }
 
 //@RestController

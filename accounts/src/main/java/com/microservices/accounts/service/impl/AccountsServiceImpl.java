@@ -1,9 +1,12 @@
 package com.microservices.accounts.service.impl;
 
 import com.microservices.accounts.constants.AccountsConstants;
+import com.microservices.accounts.dto.AccountsDto;
 import com.microservices.accounts.dto.CustomerDto;
 import com.microservices.accounts.entity.Customer;
 import com.microservices.accounts.exception.CustomerAlreadyExistsException;
+import com.microservices.accounts.exception.ResourceNotFoundException;
+import com.microservices.accounts.mapper.AccountsMapper;
 import com.microservices.accounts.mapper.CustomerMapper;
 import com.microservices.accounts.repository.AccountsRepository;
 import com.microservices.accounts.repository.CustomerRepository;
@@ -28,21 +31,37 @@ public class AccountsServiceImpl implements IAccountsService {
     private AccountsRepository accountsRepository;
     private CustomerRepository customerRepository;
 
+    /**
+     * Creates a new customer account if the provided mobile number is not already registered.
+     *
+     * @param customerDto The customer data transfer object containing the details of the customer to be registered.
+     * @throws CustomerAlreadyExistsException If a customer with the given mobile number already exists.
+     */
     @Override
     public void createAccount(CustomerDto customerDto) {
         // Map the CustomerDto to a Customer entity using the CustomerMapper
         Customer customer = CustomerMapper.mapToCustomer(customerDto, new Customer());
+
+        // Check if a customer with the given mobile number already exists in the repository
         Optional<Customer> optionalCustomer = customerRepository.findByMobileNumber(customerDto.getMobileNumber());
-        if(optionalCustomer.isPresent()) {
-            throw new CustomerAlreadyExistsException("Customer already registered with given mobileNumber "
-                    +customerDto.getMobileNumber());
+        if (optionalCustomer.isPresent()) {
+            // Throw an exception if the customer already exists
+            throw new CustomerAlreadyExistsException("Customer already registered with given mobile number "
+                    + customerDto.getMobileNumber());
         }
+
+        // Set creation metadata for the new customer
         customer.setCreatedAt(LocalDateTime.now());
-        customer.setCreatedBy("Anomymous");
-        // Save the mapped Customer entity to the customer repository
+        customer.setCreatedBy("Anonymous");
+
+        // Save the new customer entity in the customer repository
         Customer savedCustomer = customerRepository.save(customer);
+
+        // Create and save a new account associated with the newly created customer
         accountsRepository.save(createNewAccount(savedCustomer));
     }
+
+
 
     /**
      * Creates a new bank account for a given customer.
@@ -80,4 +99,23 @@ public class AccountsServiceImpl implements IAccountsService {
         // Return the newly created account object
         return newAccount;
     }
+
+    /**
+     * @param mobileNumber - Input Mobile Number
+     * @return Accounts Details based on a given mobileNumber
+     */
+    @Override
+    public CustomerDto fetchAccount(String mobileNumber) {
+        Customer customer = customerRepository.findByMobileNumber(mobileNumber).orElseThrow(
+                () -> new ResourceNotFoundException("Customer", "mobileNumber", mobileNumber)
+        );
+        Accounts accounts = accountsRepository.findByCustomerId(customer.getCustomerId()).orElseThrow(
+                () -> new ResourceNotFoundException("Account", "customerId", customer.getCustomerId().toString())
+        );
+        CustomerDto customerDto = CustomerMapper.mapToCustomerDto(customer, new CustomerDto());
+        customerDto.setAccountsDto(AccountsMapper.mapToAccountsDto(accounts, new AccountsDto()));
+        return customerDto;
+    }
 }
+
+
