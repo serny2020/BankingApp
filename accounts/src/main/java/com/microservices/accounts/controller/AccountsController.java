@@ -3,11 +3,14 @@ package com.microservices.accounts.controller;
 import com.microservices.accounts.dto.CustomerDto;
 import com.microservices.accounts.dto.ResponseDto;
 import com.microservices.accounts.service.IAccountsService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import com.microservices.accounts.constants.AccountsConstants;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -18,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping(path = "/api", produces = {MediaType.APPLICATION_JSON_VALUE})
 @AllArgsConstructor
+@Validated // ask spring boot for validating user input
 public class AccountsController {
 
     // The service responsible for account-related operations
@@ -31,7 +35,7 @@ public class AccountsController {
      * @return A ResponseEntity containing the response status and message.
      */
     @PostMapping("/create")
-    public ResponseEntity<ResponseDto> createAccount(@RequestBody CustomerDto customerDto) {
+    public ResponseEntity<ResponseDto> createAccount(@Valid @RequestBody CustomerDto customerDto) {
         // Calls the service layer to create the customer account
         iAccountsService.createAccount(customerDto);
 
@@ -47,7 +51,9 @@ public class AccountsController {
      * Returns HTTP 200 OK status if successful.
      */
     @GetMapping("/fetch")
-    public ResponseEntity<CustomerDto> fetchAccountDetails(@RequestParam String mobileNumber) {
+    public ResponseEntity<CustomerDto> fetchAccountDetails(@RequestParam
+                                                           @Pattern(regexp = "(^$|[0-9]{5})", message = "AccountNumber must be 5 digits")
+                                                           String mobileNumber) {
         // Fetch customer account details using the provided mobile number
         CustomerDto customerDto = iAccountsService.fetchAccount(mobileNumber);
 
@@ -56,7 +62,7 @@ public class AccountsController {
     }
 
     @PutMapping("/update")
-    public ResponseEntity<ResponseDto> updateAccountDetails(@RequestBody CustomerDto customerDto) {
+    public ResponseEntity<ResponseDto> updateAccountDetails(@Valid @RequestBody CustomerDto customerDto) {
         boolean isUpdated = iAccountsService.updateAccount(customerDto);
         if (isUpdated) {
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseDto(AccountsConstants.STATUS_200, AccountsConstants.MESSAGE_200));
@@ -66,7 +72,9 @@ public class AccountsController {
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<ResponseDto> deleteAccountDetails(@RequestParam String mobileNumber) {
+    public ResponseEntity<ResponseDto> deleteAccountDetails(@RequestParam
+                                                            @Pattern(regexp = "(^$|[0-9]{5})", message = "AccountNumber must be 5 digits")
+                                                            String mobileNumber) {
         boolean isDeleted = iAccountsService.deleteAccount(mobileNumber);
         if (isDeleted) {
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseDto(AccountsConstants.STATUS_200, AccountsConstants.MESSAGE_200));
