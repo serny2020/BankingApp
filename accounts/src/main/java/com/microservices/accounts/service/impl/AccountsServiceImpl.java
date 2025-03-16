@@ -51,8 +51,9 @@ public class AccountsServiceImpl implements IAccountsService {
         }
 
         // Set creation metadata for the new customer
-        customer.setCreatedAt(LocalDateTime.now());
-        customer.setCreatedBy("Anonymous");
+        // now handled by spring jpa audit listener
+//        customer.setCreatedAt(LocalDateTime.now());
+//        customer.setCreatedBy("Anonymous");
 
         // Save the new customer entity in the customer repository
         Customer savedCustomer = customerRepository.save(customer);
@@ -91,10 +92,10 @@ public class AccountsServiceImpl implements IAccountsService {
         newAccount.setBranchAddress(AccountsConstants.ADDRESS);
 
         // Record the creation timestamp
-        newAccount.setCreatedAt(LocalDateTime.now());
+//        newAccount.setCreatedAt(LocalDateTime.now());
 
         // Set createdBy field to indicate an anonymous system-generated entry
-        newAccount.setCreatedBy("Anonymous");
+//        newAccount.setCreatedBy("Anonymous");
 
         // Return the newly created account object
         return newAccount;
