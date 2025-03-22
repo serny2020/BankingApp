@@ -14,3 +14,15 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+
+build:
+  version: "1.0.0"
+
+accounts:
+  message: "Welcome to accounts related local APIs "
+  contactDetails:
+    name: "Shawn Sun - Developer"
+    email: "apple.splandy@gmail.com"
+  onCallSupport:
+    - 12345
+    - 23456
