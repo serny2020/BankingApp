@@ -1,0 +1,16 @@
+spring:
+  config:
+    activate:
+      on-profile: "prod"
+
+build:
+  version: "1.0.0"
+
+cards:
+  message: "Welcome to accounts service related prod APIs "
+  contactDetails:
+    name: "Shawn Sun - Product Owner"
+    email: "apple.splandy@gmail.com"
+  onCallSupport:
+    - 12345
+    - 23456

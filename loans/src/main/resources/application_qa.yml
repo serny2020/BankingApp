@@ -1,0 +1,16 @@
+spring:
+  config:
+    activate:
+      on-profile: "qa"
+
+build:
+  version: "1.0.2"
+
+loans:
+  message: "Welcome to accounts service related QA APIs "
+  contactDetails:
+    name: "Shawn Sun - QA Lead"
+    email: "apple.splandy@gmail.com"
+  onCallSupport:
+    - 12345
+    - 23456
