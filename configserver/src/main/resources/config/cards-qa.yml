@@ -1,12 +1,7 @@
-spring:
-  config:
-    activate:
-      on-profile: "qa"
-
 build:
   version: "1.0.2"
 
-accounts:
+cards:
   message: "Welcome to accounts service related QA APIs "
   contactDetails:
     name: "Shawn Sun - QA Lead"

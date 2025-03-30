@@ -1,13 +1,8 @@
-spring:
-  config:
-    activate:
-      on-profile: "qa"
-
 build:
   version: "1.0.2"
 
 accounts:
-  message: "Welcome to accounts service related QA APIs "
+  message: "Welcome to cards service related QA APIs "
   contactDetails:
     name: "Shawn Sun - QA Lead"
     email: "apple.splandy@gmail.com"

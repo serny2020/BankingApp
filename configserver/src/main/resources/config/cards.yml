@@ -1,0 +1,11 @@
+build:
+  version: "1.0.3"
+
+cards:
+  message: "Welcome to cards related local APIs "
+  contactDetails:
+    name: "Shawn Sun - Developer"
+    email: "apple.splandy@gmail.com"
+  onCallSupport:
+    - 12345
+    - 23456

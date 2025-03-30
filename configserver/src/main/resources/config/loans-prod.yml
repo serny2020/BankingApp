@@ -1,12 +1,7 @@
-spring:
-  config:
-    activate:
-      on-profile: "prod"
-
 build:
   version: "1.0.0"
 
-accounts:
+loans:
   message: "Welcome to accounts service related prod APIs "
   contactDetails:
     name: "Shawn Sun - Product Owner"
