@@ -17,8 +17,8 @@
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/unknown/lombok-unknown.jar" />
         </processorPath>
         <module name="loans" />
-        <module name="accounts" />
         <module name="cards" />
+        <module name="accounts" />
       </profile>
     </annotationProcessing>
   </component>
