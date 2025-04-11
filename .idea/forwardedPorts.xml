@@ -8,9 +8,27 @@
           <option name="readOnly" value="false" />
         </ForwardedPortInfo>
       </entry>
+      <entry key="8080">
+        <ForwardedPortInfo>
+          <option name="hostPort" value="8080" />
+          <option name="readOnly" value="false" />
+        </ForwardedPortInfo>
+      </entry>
       <entry key="8081">
         <ForwardedPortInfo>
           <option name="hostPort" value="8081" />
+          <option name="readOnly" value="false" />
+        </ForwardedPortInfo>
+      </entry>
+      <entry key="8090">
+        <ForwardedPortInfo>
+          <option name="hostPort" value="8090" />
+          <option name="readOnly" value="false" />
+        </ForwardedPortInfo>
+      </entry>
+      <entry key="9000">
+        <ForwardedPortInfo>
+          <option name="hostPort" value="9000" />
           <option name="readOnly" value="false" />
         </ForwardedPortInfo>
       </entry>
