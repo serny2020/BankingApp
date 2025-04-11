@@ -59,7 +59,7 @@ services:
       SPRING_PROFILES_ACTIVE: default
 
   accounts:
-    image: "puzzledsunrise/accounts:1.0.0"
+    image: "puzzledsunrise/accounts:3.0.0"
     container_name: accounts-ms
     ports:
       - "8080:8080"
