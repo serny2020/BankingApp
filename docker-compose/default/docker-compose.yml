@@ -1,61 +1,137 @@
+services:
+  rabbit:
+    image: rabbitmq:3.13-management
+    hostname: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: rabbitmq-diagnostics check_port_connectivity
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    networks:
+      - bankingApp
+
+  configserver:
+    image: "puzzledsunrise/configserver:3.0.0"
+    container_name: configserver-ms
+    ports:
+      - "8071:8071"
+    depends_on:
+      rabbit:
+        condition: service_healthy
+    healthcheck:
+      test: "curl --fail --silent localhost:8071/actuator/health/readiness | grep UP || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - bankingApp
+    environment:
+      SPRING_RABBITMQ_HOST: "rabbit"
+
+  eurekaserver:
+    image: "puzzledsunrise/eurekaserver:3.0.0"
+    container_name: eurekaserver-ms
+    ports:
+      - "8070:8070"
+    healthcheck:
+      test: "curl --fail --silent localhost:8070/actuator/health/readiness | grep UP || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 700m
+    networks:
+      - bankingApp
+    depends_on:
+      configserver:
+        condition: service_healthy
+    environment:
+      SPRING_APPLICATION_NAME: "eurekaserver"
+      SPRING_CONFIG_IMPORT: "configserver:http://configserver:8071/"
+      SPRING_PROFILES_ACTIVE: default
+
+  accounts:
+    image: "puzzledsunrise/accounts:1.0.0"
+    container_name: accounts-ms
+    ports:
+      - "8080:8080"
+    depends_on:
+      configserver:
+        condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 700m
+    networks:
+      - bankingApp
+    environment:
+      SPRING_APPLICATION_NAME: "accounts"
+      SPRING_CONFIG_IMPORT: "configserver:http://configserver:8071/"
+      SPRING_PROFILES_ACTIVE: default
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
+
+
+  loans:
+    image: "puzzledsunrise/loans:1.0.0"
+    container_name: loans-ms
+    ports:
+      - "8090:8090"
+    depends_on:
+      configserver:
+        condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 700m
+    networks:
+      - bankingApp
+    environment:
+      SPRING_APPLICATION_NAME: "loans"
+      SPRING_CONFIG_IMPORT: "configserver:http://configserver:8071/"
+      SPRING_PROFILES_ACTIVE: default
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
+
+  cards:
+    image: "puzzledsunrise/cards:2.0.0"
+    container_name: cards-ms
+    ports:
+      - "9000:9000"
+    depends_on:
+      configserver:
+        condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 700m
+    networks:
+      - bankingApp
+    environment:
+      SPRING_APPLICATION_NAME: "cards"
+      SPRING_CONFIG_IMPORT: "configserver:http://configserver:8071/"
+      SPRING_PROFILES_ACTIVE: default
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
+
+
+
+networks:
+  bankingApp:
+    driver: "bridge"
+#
 #services:
-#  accountsdb:
-#    image: mysql
-#    container_name: accountsdb
-#    ports:
-#      - 3306:3306
-#    healthcheck:
-#      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
-#      timeout: 10s
-#      retries: 10
-#      interval: 10s
-#      start_period: 10s
-#    environment:
-#      MYSQL_ROOT_PASSWORD: root
-#      MYSQL_DATABASE: accountsdb
-#    volumes:
-#      - accountsdb-data:/var/lib/mysql
-#    networks:
-#      - bankingApp
-#
-#  loansdb:
-#    image: mysql
-#    container_name: loansdb
-#    ports:
-#      - 3307:3306
-#    healthcheck:
-#      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
-#      timeout: 10s
-#      retries: 10
-#      interval: 10s
-#      start_period: 10s
-#    environment:
-#      MYSQL_ROOT_PASSWORD: root
-#      MYSQL_DATABASE: loansdb
-#    volumes:
-#      - loansdb-data:/var/lib/mysql
-#    networks:
-#      - bankingApp
-#
-#  cardsdb:
-#    image: mysql
-#    container_name: cardsdb
-#    ports:
-#      - 3308:3306
-#    healthcheck:
-#      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
-#      timeout: 10s
-#      retries: 10
-#      interval: 10s
-#      start_period: 10s
-#    environment:
-#      MYSQL_ROOT_PASSWORD: root
-#      MYSQL_DATABASE: cardsdb
-#    volumes:
-#      - cardsdb-data:/var/lib/mysql
-#    networks:
-#      - bankingApp
-#
 #  rabbit:
 #    image: rabbitmq:3.13-management
 #    hostname: rabbitmq
@@ -72,7 +148,7 @@
 #      - bankingApp
 #
 #  configserver:
-#    image: "puzzledsunrise/configserver:1.0.0"
+#    image: "puzzledsunrise/configserver:3.0.0"
 #    container_name: configserver-ms
 #    ports:
 #      - "8071:8071"
@@ -96,8 +172,6 @@
 #    ports:
 #      - "8080:8080"
 #    depends_on:
-#      accountsdb:
-#        condition: service_healthy
 #      configserver:
 #        condition: service_healthy
 #    deploy:
@@ -110,9 +184,7 @@
 #      SPRING_APPLICATION_NAME: "accounts"
 #      SPRING_CONFIG_IMPORT: "configserver:http://configserver:8071/"
 #      SPRING_PROFILES_ACTIVE: default
-#      SPRING_DATASOURCE_URL: "jdbc:mysql://accountsdb:3306/accountsdb"
-#      SPRING_DATASOURCE_USERNAME: root
-#      SPRING_DATASOURCE_PASSWORD: root
+#
 #
 #  loans:
 #    image: "puzzledsunrise/loans:1.0.0"
@@ -120,8 +192,6 @@
 #    ports:
 #      - "8090:8090"
 #    depends_on:
-#      loansdb:
-#        condition: service_healthy
 #      configserver:
 #        condition: service_healthy
 #    deploy:
@@ -134,18 +204,13 @@
 #      SPRING_APPLICATION_NAME: "loans"
 #      SPRING_CONFIG_IMPORT: "configserver:http://configserver:8071/"
 #      SPRING_PROFILES_ACTIVE: default
-#      SPRING_DATASOURCE_URL: "jdbc:mysql://loansdb:3306/loansdb"
-#      SPRING_DATASOURCE_USERNAME: root
-#      SPRING_DATASOURCE_PASSWORD: root
 #
 #  cards:
-#    image: "puzzledsunrise/cards:1.0.0"
+#    image: "puzzledsunrise/cards:2.0.0"
 #    container_name: cards-ms
 #    ports:
 #      - "9000:9000"
 #    depends_on:
-#      cardsdb:
-#        condition: service_healthy
 #      configserver:
 #        condition: service_healthy
 #    deploy:
@@ -158,124 +223,21 @@
 #      SPRING_APPLICATION_NAME: "cards"
 #      SPRING_CONFIG_IMPORT: "configserver:http://configserver:8071/"
 #      SPRING_PROFILES_ACTIVE: default
-#      SPRING_DATASOURCE_URL: "jdbc:mysql://cardsdb:3306/cardsdb"
-#      SPRING_DATASOURCE_USERNAME: root
-#      SPRING_DATASOURCE_PASSWORD: root
 #
-#  phpmyadmin:
-#    image: phpmyadmin/phpmyadmin
-#    container_name: phpmyadmin
+#  eurekaserver:
+#    image: "puzzledsunrise/eurekaserver:3.0.0"
+#    container_name: eurekaserver-ms
 #    ports:
-#      - "8081:80"
-#    environment:
-#      PMA_HOSTS: accountsdb,loansdb,cardsdb
-#      MYSQL_ROOT_PASSWORD: root
+#      - "8070:8070"
+#    healthcheck:
+#      test: rabbitmq-diagnostics check_port_connectivity
+#      interval: 10s
+#      timeout: 5s
+#      retries: 10
+#      start_period: 5s
 #    networks:
 #      - bankingApp
 #
 #networks:
 #  bankingApp:
-#    driver: bridge
-#
-#volumes:
-#  accountsdb-data:
-#  loansdb-data:
-#  cardsdb-data:
-
-
-services:
-  rabbit:
-    image: rabbitmq:3.13-management
-    hostname: rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    healthcheck:
-      test: rabbitmq-diagnostics check_port_connectivity
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 5s
-    networks:
-      - bankingApp
-
-  configserver:
-    image: "puzzledsunrise/configserver:1.0.0"
-    container_name: configserver-ms
-    ports:
-      - "8071:8071"
-    depends_on:
-      rabbit:
-        condition: service_healthy
-    healthcheck:
-      test: "curl --fail --silent localhost:8071/actuator/health/readiness | grep UP || exit 1"
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 10s
-    networks:
-      - bankingApp
-    environment:
-      SPRING_RABBITMQ_HOST: "rabbit"
-
-  accounts:
-    image: "puzzledsunrise/accounts:1.0.0"
-    container_name: accounts-ms
-    ports:
-      - "8080:8080"
-    depends_on:
-      configserver:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          memory: 700m
-    networks:
-      - bankingApp
-    environment:
-      SPRING_APPLICATION_NAME: "accounts"
-      SPRING_CONFIG_IMPORT: "configserver:http://configserver:8071/"
-      SPRING_PROFILES_ACTIVE: default
-
-
-  loans:
-    image: "puzzledsunrise/loans:1.0.0"
-    container_name: loans-ms
-    ports:
-      - "8090:8090"
-    depends_on:
-      configserver:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          memory: 700m
-    networks:
-      - bankingApp
-    environment:
-      SPRING_APPLICATION_NAME: "loans"
-      SPRING_CONFIG_IMPORT: "configserver:http://configserver:8071/"
-      SPRING_PROFILES_ACTIVE: default
-
-  cards:
-    image: "puzzledsunrise/cards:1.0.0"
-    container_name: cards-ms
-    ports:
-      - "9000:9000"
-    depends_on:
-      configserver:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          memory: 700m
-    networks:
-      - bankingApp
-    environment:
-      SPRING_APPLICATION_NAME: "cards"
-      SPRING_CONFIG_IMPORT: "configserver:http://configserver:8071/"
-      SPRING_PROFILES_ACTIVE: default
-
-networks:
-  bankingApp:
-    driver: "bridge"
+#    driver: "bridge"

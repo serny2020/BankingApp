@@ -16,7 +16,7 @@ services:
       service: network-deploy-service
 
   configserver:
-    image: "puzzledsunrise/configserver:1.0.0"
+    image: "puzzledsunrise/configserver:3.0.0"
     container_name: configserver-ms
     ports:
       - "8071:8071"
@@ -32,6 +32,26 @@ services:
     extends:
       file: common-config.yml
       service: microservice-base-config
+
+  eurekaserver:
+    image: "puzzledsunrise/eurekaserver:3.0.0"
+    container_name: eurekaserver-ms
+    ports:
+      - "8070:8070"
+    depends_on:
+      configserver:
+        condition: service_healthy
+    healthcheck:
+      test: "curl --fail --silent localhost:8070/actuator/health/readiness | grep UP || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    extends:
+      file: common-config.yml
+      service: microservice-configserver-config
+    environment:
+      SPRING_APPLICATION_NAME: "eurekaserver"
 
   accounts:
     image: "puzzledsunrise/accounts:1.0.0"
@@ -62,7 +82,7 @@ services:
       service: microservice-configserver-config
 
   cards:
-    image: "puzzledsunrise/cards:1.0.0"
+    image: "puzzledsunrise/cards:3.0.0"
     container_name: cards-ms
     ports:
       - "9000:9000"
