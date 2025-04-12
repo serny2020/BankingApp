@@ -82,4 +82,10 @@ info:
   app:
     name: "loans"
     description: "Bank Loans Application"
-    version: "1.0.0"
+    version: "4.0.0"
+
+logging:
+  level:
+    com:
+      loans:
+        loans: DEBUG

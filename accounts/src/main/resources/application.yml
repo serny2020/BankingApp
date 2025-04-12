@@ -51,4 +51,10 @@ info:
   app:
     name: "accounts"
     description: "Bank Accounts Application"
-    version: "1.0.0"
+    version: "4.0.0"
+
+logging:
+  level:
+    com:
+      microservices:
+        accounts: DEBUG
