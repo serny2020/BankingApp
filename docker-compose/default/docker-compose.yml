@@ -15,7 +15,7 @@ services:
       - bankingApp
 
   configserver:
-    image: "puzzledsunrise/configserver:3.0.0"
+    image: "puzzledsunrise/configserver:4.0.0"
     container_name: configserver-ms
     ports:
       - "8071:8071"
@@ -34,7 +34,7 @@ services:
       SPRING_RABBITMQ_HOST: "rabbit"
 
   eurekaserver:
-    image: "puzzledsunrise/eurekaserver:3.0.0"
+    image: "puzzledsunrise/eurekaserver:4.0.0"
     container_name: eurekaserver-ms
     ports:
       - "8070:8070"
@@ -59,10 +59,16 @@ services:
       SPRING_PROFILES_ACTIVE: default
 
   accounts:
-    image: "puzzledsunrise/accounts:3.0.0"
+    image: "puzzledsunrise/accounts:4.0.0"
     container_name: accounts-ms
     ports:
       - "8080:8080"
+    healthcheck:
+      test: "curl --fail --silent localhost:8080/actuator/health/readiness | grep UP || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     depends_on:
       configserver:
         condition: service_healthy
@@ -82,10 +88,16 @@ services:
 
 
   loans:
-    image: "puzzledsunrise/loans:1.0.0"
+    image: "puzzledsunrise/loans:4.0.0"
     container_name: loans-ms
     ports:
       - "8090:8090"
+    healthcheck:
+      test: "curl --fail --silent localhost:8090/actuator/health/readiness | grep UP || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     depends_on:
       configserver:
         condition: service_healthy
@@ -104,10 +116,16 @@ services:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
 
   cards:
-    image: "puzzledsunrise/cards:2.0.0"
+    image: "puzzledsunrise/cards:4.0.0"
     container_name: cards-ms
     ports:
       - "9000:9000"
+    healthcheck:
+      test: "curl --fail --silent localhost:9000/actuator/health/readiness | grep UP || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     depends_on:
       configserver:
         condition: service_healthy
@@ -125,7 +143,33 @@ services:
       SPRING_PROFILES_ACTIVE: default
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
 
-
+  gatewayserver:
+    image: "puzzledsunrise/gatewayserver:4.0.0"
+    container_name: gatewayserver-ms
+    ports:
+      - "8072:8072"
+    depends_on:
+      configserver:
+        condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
+      accounts:
+        condition: service_healthy
+      loans:
+        condition: service_healthy
+      cards:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 700m
+    networks:
+      - bankingApp
+    environment:
+      SPRING_APPLICATION_NAME: "gatewayserver"
+      SPRING_CONFIG_IMPORT: "configserver:http://configserver:8071/"
+      SPRING_PROFILES_ACTIVE: default
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
 
 networks:
   bankingApp:

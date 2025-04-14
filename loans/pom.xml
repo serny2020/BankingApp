@@ -119,7 +119,7 @@
 				<version>3.4.5</version>
 				<configuration>
 					<to>
-						<image>puzzledsunrise/${project.artifactId}:1.0.0</image>
+						<image>puzzledsunrise/${project.artifactId}:4.0.0</image>
 					</to>
 				</configuration>
 			</plugin>
@@ -128,7 +128,7 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
 					<image>
-						<name>puzzledsunrise/${project.artifactId}:4.0.0</name>
+						<name>puzzledsunrise/${project.artifactId}:1.0.0</name>
 					</image>
 					<excludes>
 						<exclude>
