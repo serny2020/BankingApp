@@ -79,18 +79,21 @@ resilience4j.circuitbreaker:
       failureRateThreshold: 50
       waitDurationInOpenState: 10000
 
-#resilience4j.retry:
-#  configs:
-#    default:
-#      maxAttempts: 3
-#      waitDuration: 500
-#      enableExponentialBackoff: true
-#      exponentialBackoffMultiplier: 2
+# Define retry configuration for operations.
+# Note: Retry logic will only take effect after the server is fully started.
+# If a failure happens before this (e.g. during early initialization), fallback logic might be triggered by the circuit breaker instead of retrying.
+resilience4j.retry:
+  configs:
+    default:
+      maxAttempts: 3
+      waitDuration: 500 # The wait duration between retries in milliseconds (500ms)
+      enableExponentialBackoff: true
+      exponentialBackoffMultiplier: 2
 #      ignoreExceptions:
-#        - java.lang.NullPointerException
-#      retryExceptions:
-#        - java.util.concurrent.TimeoutException
-#
+#        - java.lang.NullPointerException # no re-try for this particular exception
+      retryExceptions:
+        - java.util.concurrent.TimeoutException
+
 #resilience4j.ratelimiter:
 #  configs:
 #    default:
