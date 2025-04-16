@@ -1,4 +1,15 @@
 services:
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli ping | grep PONG" ]
+      timeout: 10s
+      retries: 10
+    networks:
+      - bankingApp
+
   rabbit:
     image: rabbitmq:3.13-management
     hostname: rabbitmq
@@ -15,7 +26,7 @@ services:
       - bankingApp
 
   configserver:
-    image: "puzzledsunrise/configserver:4.0.0"
+    image: "puzzledsunrise/configserver:5.0.0"
     container_name: configserver-ms
     ports:
       - "8071:8071"
@@ -34,7 +45,7 @@ services:
       SPRING_RABBITMQ_HOST: "rabbit"
 
   eurekaserver:
-    image: "puzzledsunrise/eurekaserver:4.0.0"
+    image: "puzzledsunrise/eurekaserver:5.0.0"
     container_name: eurekaserver-ms
     ports:
       - "8070:8070"
@@ -59,7 +70,7 @@ services:
       SPRING_PROFILES_ACTIVE: default
 
   accounts:
-    image: "puzzledsunrise/accounts:4.0.0"
+    image: "puzzledsunrise/accounts:5.0.0"
     container_name: accounts-ms
     ports:
       - "8080:8080"
@@ -88,7 +99,7 @@ services:
 
 
   loans:
-    image: "puzzledsunrise/loans:4.0.0"
+    image: "puzzledsunrise/loans:5.0.0"
     container_name: loans-ms
     ports:
       - "8090:8090"
@@ -116,7 +127,7 @@ services:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
 
   cards:
-    image: "puzzledsunrise/cards:4.0.0"
+    image: "puzzledsunrise/cards:5.0.0"
     container_name: cards-ms
     ports:
       - "9000:9000"
@@ -144,7 +155,7 @@ services:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
 
   gatewayserver:
-    image: "puzzledsunrise/gatewayserver:4.0.0"
+    image: "puzzledsunrise/gatewayserver:5.0.0"
     container_name: gatewayserver-ms
     ports:
       - "8072:8072"
@@ -159,6 +170,8 @@ services:
         condition: service_healthy
       cards:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     deploy:
       resources:
         limits:
@@ -170,6 +183,10 @@ services:
       SPRING_CONFIG_IMPORT: "configserver:http://configserver:8071/"
       SPRING_PROFILES_ACTIVE: default
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
+      SPRING_DATA_REDIS_CONNECT-TIMEOUT: 2s
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_TIMEOUT: 1s
 
 networks:
   bankingApp:

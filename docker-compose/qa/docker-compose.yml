@@ -1,4 +1,15 @@
 services:
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli ping | grep PONG" ]
+      timeout: 10s
+      retries: 10
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
   rabbit:
     image: rabbitmq:3.13-management
     hostname: rabbitmq
@@ -16,7 +27,7 @@ services:
       service: network-deploy-service
 
   configserver:
-    image: "puzzledsunrise/configserver:4.0.0"
+    image: "puzzledsunrise/configserver:5.0.0"
     container_name: configserver-ms
     ports:
       - "8071:8071"
@@ -34,7 +45,7 @@ services:
       service: microservice-base-config
 
   eurekaserver:
-    image: "puzzledsunrise/eurekaserver:4.0.0"
+    image: "puzzledsunrise/eurekaserver:5.0.0"
     container_name: eurekaserver-ms
     ports:
       - "8070:8070"
@@ -54,7 +65,7 @@ services:
       SPRING_APPLICATION_NAME: "eurekaserver"
 
   accounts:
-    image: "puzzledsunrise/accounts:4.0.0"
+    image: "puzzledsunrise/accounts:5.0.0"
     container_name: accounts-ms
     ports:
       - "8080:8080"
@@ -74,7 +85,7 @@ services:
       service: microservice-eureka-config
 
   loans:
-    image: "puzzledsunrise/loans:4.0.0"
+    image: "puzzledsunrise/loans:5.0.0"
     container_name: loans-ms
     ports:
       - "8090:8090"
@@ -94,7 +105,7 @@ services:
       service: microservice-eureka-config
 
   cards:
-    image: "puzzledsunrise/cards:4.0.0"
+    image: "puzzledsunrise/cards:5.0.0"
     container_name: cards-ms
     ports:
       - "9000:9000"
@@ -114,7 +125,7 @@ services:
       service: microservice-eureka-config
 
   gatewayserver:
-    image: "puzzledsunrise/gatewayserver:4.0.0"
+    image: "puzzledsunrise/gatewayserver:5.0.0"
     container_name: gatewayserver-ms
     ports:
       - "8072:8072"
@@ -127,6 +138,10 @@ services:
         condition: service_healthy
     environment:
       SPRING_APPLICATION_NAME: "gatewayserver"
+      SPRING_DATA_REDIS_CONNECT-TIMEOUT: 2s
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_TIMEOUT: 1s
     extends:
       file: common-config.yml
       service: microservice-eureka-config

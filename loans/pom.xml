@@ -114,16 +114,6 @@
 				</configuration>
 			</plugin>
 			<plugin>
-				<groupId>com.google.cloud.tools</groupId>
-				<artifactId>jib-maven-plugin</artifactId>
-				<version>3.4.5</version>
-				<configuration>
-					<to>
-						<image>puzzledsunrise/${project.artifactId}:4.0.0</image>
-					</to>
-				</configuration>
-			</plugin>
-			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
@@ -136,6 +126,16 @@
 							<artifactId>lombok</artifactId>
 						</exclude>
 					</excludes>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>com.google.cloud.tools</groupId>
+				<artifactId>jib-maven-plugin</artifactId>
+				<version>3.4.5</version>
+				<configuration>
+					<to>
+						<image>puzzledsunrise/${project.artifactId}:5.0.0</image>
+					</to>
 				</configuration>
 			</plugin>
 		</plugins>
