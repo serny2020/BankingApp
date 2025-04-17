@@ -139,7 +139,7 @@
 				<version>3.4.5</version>
 				<configuration>
 					<to>
-						<image>puzzledsunrise/${project.artifactId}:5.0.0</image>
+						<image>puzzledsunrise/${project.artifactId}:6.0.0</image>
 					</to>
 				</configuration>
 			</plugin>
