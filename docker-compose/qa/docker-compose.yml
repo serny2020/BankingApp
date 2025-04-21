@@ -1,6 +1,6 @@
 services:
   read:
-    image: grafana/loki:latest
+    image: grafana/loki:3.1.2
     command: "-config.file=/etc/loki/config.yaml -target=read"
     ports:
       - 3101:3100
@@ -21,7 +21,7 @@ services:
           - loki
 
   write:
-    image: grafana/loki:latest
+    image: grafana/loki:3.1.2
     command: "-config.file=/etc/loki/config.yaml -target=write"
     ports:
       - 3102:3100
@@ -39,9 +39,8 @@ services:
     networks:
       <<: *loki-dns
 
-
   alloy:
-    image: grafana/alloy:latest
+    image: grafana/alloy:v1.5.1
     volumes:
       - ../observability/alloy/alloy-local-config.yaml:/etc/alloy/config.alloy:ro
       - /var/run/docker.sock:/var/run/docker.sock
@@ -54,19 +53,8 @@ services:
       file: common-config.yml
       service: network-deploy-service
 
-  prometheus:
-    image: prom/prometheus:v3.1.0
-    container_name: prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ../observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-    extends:
-      file: common-config.yml
-      service: network-deploy-service
-
   minio:
-    image: minio/minio
+    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
     entrypoint:
       - sh
       - -euc
@@ -92,8 +80,32 @@ services:
       file: common-config.yml
       service: network-deploy-service
 
+  prometheus:
+    image: prom/prometheus:v3.1.0
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ../observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+
+  tempo:
+    image: grafana/tempo:2.6.1
+    container_name: tempo
+    command: -config.file /etc/tempo-config.yml
+    ports:
+      - "3110:3100"
+      - "4318:4318"
+    volumes:
+      - ../observability/tempo/tempo.yml:/etc/tempo-config.yml
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:11.4.0
     environment:
       - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
       - GF_AUTH_ANONYMOUS_ENABLED=true
@@ -119,7 +131,7 @@ services:
       service: network-deploy-service
 
   backend:
-    image: grafana/loki:latest
+    image: grafana/loki:3.1.2
     volumes:
       - ../observability/loki/loki-config.yaml:/etc/loki/config.yaml
     ports:
@@ -133,7 +145,7 @@ services:
       service: network-deploy-service
 
   gateway:
-    image: nginx:latest
+    image: nginx:1.27.3
     depends_on:
       - read
       - write
@@ -238,13 +250,15 @@ services:
         condition: service_healthy
     healthcheck:
       test: "curl --fail --silent localhost:8071/actuator/health/readiness | grep UP || exit 1"
-      interval: 10s
+      interval: 20s
       timeout: 5s
-      retries: 10
+      retries: 20
       start_period: 10s
     extends:
       file: common-config.yml
       service: microservice-base-config
+    environment:
+      OTEL_SERVICE_NAME: "configserver"
 
   eurekaserver:
     image: "puzzledsunrise/eurekaserver:7.0.0"
@@ -256,15 +270,16 @@ services:
         condition: service_healthy
     healthcheck:
       test: "curl --fail --silent localhost:8070/actuator/health/readiness | grep UP || exit 1"
-      interval: 10s
+      interval: 20s
       timeout: 5s
-      retries: 10
+      retries: 20
       start_period: 10s
     extends:
       file: common-config.yml
       service: microservice-configserver-config
     environment:
       SPRING_APPLICATION_NAME: "eurekaserver"
+      OTEL_SERVICE_NAME: "eurekaserver"
 
   accounts:
     image: "puzzledsunrise/accounts:7.0.0"
@@ -276,12 +291,13 @@ services:
         condition: service_healthy
     healthcheck:
       test: "curl --fail --silent localhost:8080/actuator/health/readiness | grep UP || exit 1"
-      interval: 10s
+      interval: 20s
       timeout: 5s
-      retries: 10
+      retries: 20
       start_period: 10s
     environment:
       SPRING_APPLICATION_NAME: "accounts"
+      OTEL_SERVICE_NAME: "accounts"
     extends:
       file: common-config.yml
       service: microservice-eureka-config
@@ -296,12 +312,13 @@ services:
         condition: service_healthy
     healthcheck:
       test: "curl --fail --silent localhost:8090/actuator/health/readiness | grep UP || exit 1"
-      interval: 10s
+      interval: 20s
       timeout: 5s
-      retries: 10
+      retries: 20
       start_period: 10s
     environment:
       SPRING_APPLICATION_NAME: "loans"
+      OTEL_SERVICE_NAME: "loans"
     extends:
       file: common-config.yml
       service: microservice-eureka-config
@@ -316,12 +333,13 @@ services:
         condition: service_healthy
     healthcheck:
       test: "curl --fail --silent localhost:9000/actuator/health/readiness | grep UP || exit 1"
-      interval: 10s
+      interval: 20s
       timeout: 5s
-      retries: 10
+      retries: 20
       start_period: 10s
     environment:
       SPRING_APPLICATION_NAME: "cards"
+      OTEL_SERVICE_NAME: "cards"
     extends:
       file: common-config.yml
       service: microservice-eureka-config
@@ -344,6 +362,7 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_DATA_REDIS_TIMEOUT: 1s
+      OTEL_SERVICE_NAME: "gatewayserver"
     extends:
       file: common-config.yml
       service: microservice-eureka-config
