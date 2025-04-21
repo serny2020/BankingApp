@@ -104,8 +104,10 @@ public class LoansController {
                                                      @RequestParam
                                                      @Pattern(regexp="(^$|[0-9]{5})",message = "Mobile number must be 5 digits")
                                                      String mobileNumber) {
-        logger.debug("Bank-correlation-id found: {} ", correlationId);
+//        logger.debug("Bank-correlation-id found: {} ", correlationId);
+        logger.debug("fetchLoanDetails method start");
         LoansDto loansDto = iLoansService.fetchLoan(mobileNumber);
+        logger.debug("fetchLoanDetails method end");
         return ResponseEntity.status(HttpStatus.OK).body(loansDto);
     }
 
