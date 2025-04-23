@@ -2,7 +2,9 @@ package com.microservices.accounts.service.impl;
 
 import com.microservices.accounts.constants.AccountsConstants;
 import com.microservices.accounts.dto.AccountsDto;
+import com.microservices.accounts.dto.AccountsMsgDto;
 import com.microservices.accounts.dto.CustomerDto;
+import com.microservices.accounts.entity.Accounts;
 import com.microservices.accounts.entity.Customer;
 import com.microservices.accounts.exception.CustomerAlreadyExistsException;
 import com.microservices.accounts.exception.ResourceNotFoundException;
@@ -11,14 +13,12 @@ import com.microservices.accounts.mapper.CustomerMapper;
 import com.microservices.accounts.repository.AccountsRepository;
 import com.microservices.accounts.repository.CustomerRepository;
 import com.microservices.accounts.service.IAccountsService;
-import com.microservices.accounts.entity.Accounts;
-import java.time.LocalDate;
-
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Random;
 
@@ -30,6 +30,8 @@ public class AccountsServiceImpl implements IAccountsService {
     // The AccountsRepository and CustomerRepository are the dependencies that the service needs
     private AccountsRepository accountsRepository;
     private CustomerRepository customerRepository;
+    private final StreamBridge streamBridge;
+    private static final Logger log = LoggerFactory.getLogger(AccountsServiceImpl.class);
 
     /**
      * Creates a new customer account if the provided mobile number is not already registered.
@@ -57,9 +59,18 @@ public class AccountsServiceImpl implements IAccountsService {
 
         // Save the new customer entity in the customer repository
         Customer savedCustomer = customerRepository.save(customer);
-
+        Accounts savedAccount = accountsRepository.save(createNewAccount(savedCustomer));
+        sendCommunication(savedAccount, savedCustomer);
         // Create and save a new account associated with the newly created customer
         accountsRepository.save(createNewAccount(savedCustomer));
+    }
+
+    private void sendCommunication(Accounts account, Customer customer) {
+        var accountsMsgDto = new AccountsMsgDto(account.getAccountNumber(), customer.getName(),
+                customer.getEmail(), customer.getMobileNumber());
+        log.info("Sending Communication request for the details: {}", accountsMsgDto);
+        var result = streamBridge.send("sendCommunication-out-0", accountsMsgDto);
+        log.info("Is the Communication request successfully triggered ? : {}", result);
     }
 
 
@@ -190,6 +201,24 @@ public class AccountsServiceImpl implements IAccountsService {
 
         // Return true to indicate successful deletion
         return true;
+    }
+
+    /**
+     * @param accountNumber - Long
+     * @return boolean indicating if the update of communication status is successful or not
+     */
+    @Override
+    public boolean updateCommunicationStatus(Long accountNumber) {
+        boolean isUpdated = false;
+        if(accountNumber !=null ){
+            Accounts accounts = accountsRepository.findById(accountNumber).orElseThrow(
+                    () -> new ResourceNotFoundException("Account", "AccountNumber", accountNumber.toString())
+            );
+            accounts.setCommunicationSw(true);
+            accountsRepository.save(accounts);
+            isUpdated = true;
+        }
+        return  isUpdated;
     }
 }
 
