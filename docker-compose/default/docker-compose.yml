@@ -253,7 +253,7 @@ services:
       service: network-deploy-service
 
   configserver:
-    image: "puzzledsunrise/configserver:7.0.0"
+    image: "puzzledsunrise/configserver:8.0.0"
     container_name: configserver-ms
     ports:
       - "8071:8071"
@@ -273,7 +273,7 @@ services:
       OTEL_SERVICE_NAME: "configserver"
 
   eurekaserver:
-    image: "puzzledsunrise/eurekaserver:7.0.0"
+    image: "puzzledsunrise/eurekaserver:8.0.0"
     container_name: eurekaserver-ms
     ports:
       - "8070:8070"
@@ -294,10 +294,12 @@ services:
       OTEL_SERVICE_NAME: "eurekaserver"
 
   accounts:
-    image: "puzzledsunrise/accounts:7.0.0"
+    image: "puzzledsunrise/accounts:8.0.0"
     container_name: accounts-ms
     depends_on:
       configserver:
+        condition: service_healthy
+      rabbit:
         condition: service_healthy
     healthcheck:
       test: "curl --fail --silent localhost:8080/actuator/health/readiness | grep UP || exit 1"
@@ -308,12 +310,23 @@ services:
     environment:
       SPRING_APPLICATION_NAME: "accounts"
       OTEL_SERVICE_NAME: "accounts"
+      SPRING_RABBITMQ_HOST: "rabbit"
     extends:
       file: common-config.yml
       service: microservice-eureka-config
-
+  message:
+    image: "puzzledsunrise/message:8.0.0"
+    container_name: message-ms
+    depends_on:
+      rabbit:
+        condition: service_healthy
+    environment:
+      SPRING_RABBITMQ_HOST: "rabbit"
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
   loans:
-    image: "puzzledsunrise/loans:7.0.0"
+    image: "puzzledsunrise/loans:8.0.0"
     container_name: loans-ms
     depends_on:
       configserver:
@@ -332,7 +345,7 @@ services:
       service: microservice-eureka-config
 
   cards:
-    image: "puzzledsunrise/cards:7.0.0"
+    image: "puzzledsunrise/cards:8.0.0"
     container_name: cards-ms
     depends_on:
       configserver:
@@ -351,7 +364,7 @@ services:
       service: microservice-eureka-config
 
   gatewayserver:
-    image: "puzzledsunrise/gatewayserver:7.1.0"
+    image: "puzzledsunrise/gatewayserver:8.0.0"
     container_name: gatewayserver-ms
     ports:
       - "8072:8072"
