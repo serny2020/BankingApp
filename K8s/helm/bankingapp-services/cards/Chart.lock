@@ -1,0 +1,6 @@
+dependencies:
+- name: bankingapp-common
+  repository: file://../../bankingapp-common
+  version: 0.1.0
+digest: sha256:594f0ac99fa725c86ad52ebce085dff35b9d3fe66afa00ca741a54c4cc45ecd9
+generated: "2025-04-25T19:59:51.352195019Z"
